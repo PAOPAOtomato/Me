@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Ray — Elf Intro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;          /* slate-900 */
+      --card: #111827;        /* gray-900 */
+      --muted: #94a3b8;       /* slate-400 */
+      --text: #e5e7eb;        /* gray-200 */
+      --accent: #22c55e;      /* green-500 */
+      --ring: #22c55e40;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1000px 600px at 80% -10%, #1f2937 0%, var(--bg) 60%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+    header {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .avatar {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, #16a34a, #65a30d);
+      border-radius: 20px;
+      display: grid; place-items: center;
+      box-shadow: var(--shadow);
+    }
+    .avatar span { font-size: 42px; }
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 36px);
+      letter-spacing: .3px;
+    }
+    .card {
+      background: linear-gradient(180deg, #0b1220, var(--card));
+      border: 1px solid #1f2937;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .lead {
+      font-size: 18px;
+      color: #f1f5f9;
+      margin: 0;
+    }
+    .muted { color: var(--muted); }
+
+    /* Gallery */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .tile {
+      position: relative;
+      grid-column: span 4;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      background: #0b1220;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .tile:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,.35); }
+    .tile img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+    .tile figcaption {
+      position: absolute; inset: auto 0 0 0;
+      padding: 8px 10px;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.6));
+      font-size: 13px; color: #e2e8f0;
+    }
+    @media (max-width: 900px) { .tile { grid-column: span 6; } }
+    @media (max-width: 580px) { .tile { grid-column: span 12; } .tile img{ height: 200px; } }
+
+    /* Modal (CSS-only lightbox via :target) */
+    .modal {
+      position: fixed; inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,.85);
+      padding: 24px;
+      z-index: 50;
+    }
+    .modal:target { display: grid; }
+    .modal img {
+      max-width: min(100%, 1000px);
+      max-height: 80vh;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    .close {
+      position: fixed; top: 14px; right: 16px;
+      text-decoration: none;
+      color: #e5e7eb; background: #111827;
+      border: 1px solid #1f2937;
+      padding: 8px 10px; border-radius: 10px; font-size: 14px;
+    }
+    .hint {
+      margin-top: 8px; font-size: 14px; color: var(--muted);
+    }
+
+    /* Puzzle */
+    .puzzle {
+      margin-top: 22px;
+      display: grid; gap: 8px;
+    }
+    .legend {
+      font-size: 14px; color: var(--muted);
+      display: flex; gap: 12px; flex-wrap: wrap;
+      align-items: center;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border-radius: 999px;
+      background: #0b1220; border: 1px solid #1f2937;
+      box-shadow: inset 0 0 0 2px transparent;
+      transition: box-shadow .2s;
+    }
+    .chip:focus-within { outline: none; box-shadow: 0 0 0 4px var(--ring); }
+    .poly {
+      width: 26px; height: 26px; display: inline-block;
+    }
+    .sep { opacity: .55; padding: 0 4px; }
+    .note {
+      font-size: 13px; color: var(--muted);
+    }
+
+    /* Footer link */
+    .linkbtn {
+      display: inline-block; margin-top: 18px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #062b12; text-decoration: none; font-weight: 700;
+      padding: 10px 14px; border-radius: 12px;
+      border: 1px solid #16a34a; box-shadow: var(--shadow);
+    }
+
+    /* Utility */
+    .spacer { height: 6px; }
+    .sr-only { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .tag { font-size: 12px; color: #a7f3d0; border: 1px solid #064e3b; background: #052e22; padding: 2px 8px; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="avatar" aria-hidden="true"><span>🏋🏻‍♀️</span></div>
+      <div>
+        <h1>Hi, I’m Ray. I love dogs and cats.</h1>
+        <div class="muted">A tiny page about me</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <p class="lead">Here are a few moments I like!</p>
+
+      <!-- ========== GALLERY ==========
+      -->
+      <div class="gallery">
+        <figure class="tile">
+          <a href="#img1"><img src="lele_yellowstone.jpg" alt="This is LeLe" loading="lazy"></a>
+          <figcaption>This is LeLe</figcaption>
+        </figure>
+        <figure class="tile">
+          <a href="#img2"><img src="yuzu.jpg" alt="This is Yuzu" loading="lazy"></a>
+          <figcaption>This is Yuzu</figcaption>
+        </figure>
+        <figure class="tile">
+          <a href="#img3"><img src="dog2.jpg" alt="Doggie" loading="lazy"></a>
+          <figcaption>Doggie</figcaption>
+        </figure>
+        <figure class="tile">
+          <a href="#img4"><img src="cat2.jpg" alt="Kitty" loading="lazy"></a>
+          <figcaption>Window watcher</figcaption>
+        </figure>
+        <figure class="tile">
+          <a href="#img5"><img src="elf1.jpg" alt="LeLe and me" loading="lazy"></a>
+          <figcaption>LeLe and me</figcaption>
+        </figure>
+        <figure class="tile">
+          <a href="#img6"><img src="friends.jpg" alt="LeLe and his friend Butter" loading="lazy"></a>
+          <figcaption>LeLe and Butter</figcaption>
+        </figure>
+      </div>
+
+      <!-- CSS-only lightbox modals -->
+      <div id="img1" class="modal" aria-modal="true" role="dialog">
+        <a class="close" href="#" aria-label="Close">✕ Close</a>
+        <img src="lele_yellowstone.jpg" alt="LeLe">
+      </div>
+      <div id="img2" class="modal" aria-modal="true" role="dialog">
+        <a class="close" href="#" aria-label="Close">✕ Close</a>
+        <img src="yuzu.jpg" alt="Yuzu">
+      </div>
+      <div id="img3" class="modal" aria-modal="true" role="dialog">
+        <a class="close" href="#" aria-label="Close">✕ Close</a>
+        <img src="dog2.jpg" alt="Doggie">
+      </div>
+      <div id="img4" class="modal" aria-modal="true" role="dialog">
+        <a class="close" href="#" aria-label="Close">✕ Close</a>
+        <img src="cat2.jpg" alt="Kitty">
+      </div>
+      <div id="img5" class="modal" aria-modal="true" role="dialog">
+        <a class="close" href="#" aria-label="Close">✕ Close</a>
+        <img src="elf1.jpg" alt="LeLe and me">
+      </div>
+      <div id="img6" class="modal" aria-modal="true" role="dialog">
+        <a class="close" href="#" aria-label="Close">✕ Close</a>
+        <img src="friends.jpg" alt="LeLe and Butter">
+      </div>
+
+      <div class="spacer"></div>
+
+      <!-- ========== MUSIC SECTION ========== -->
+        <section class="card" style="margin-top: 24px;">
+        <h2 style="margin-top: 0;">🎵 My Favorite Music</h2>
+        <p class="lead">Here are a few tracks I love. You can play them right here!</p>
+
+
+        <!-- Option 2: Streaming Links (Spotify/YouTube) -->
+        <p class="muted">Or check these out on the web:</p>
+        <ul>
+            <li><a href="https://music.apple.com/us/song/samurai/1742012460" target="_blank">🎧 Favorite Song on Apple music</a></li>
+            <li><a href="https://music.apple.com/us/song/%E7%B4%A0%E8%8A%AC%E5%84%BF-%E5%88%AB%E8%B5%B0/1751782618" target="_blank">🎧 Favorite Song on Apple music</a></li>
+            <li><a href="https://www.youtube.com/watch?v=FZZM7oUbmwQ&list=PLwdNi7KVW2b-5KFSdIgqbW5gvFDsMThO-&index=11" target="_blank">📺 Favorite Song on YouTube</a></li>
+        </ul>
+        </section>
+
+        
+
+        <!-- ========== RESEARCH SECTION ========== -->
+        <section class="card" style="margin-top: 24px;">
+        <h2 style="margin-top: 0;">Research</h2>
+        <p>I study <strong>Trustworthy AI Systems</strong> — focusing on making machine learning models safer and more reliable.</p>
+        </section>
+
+
+
+      <!-- ========== PUZZLE: Phone Number via Polygons ==========
+      -->
+      <div class="puzzle">
+        <div class="legend">
+          <span class="tag">Puzzle</span>
+          <span>Decode my number: <strong>sides = digit</strong>, and <strong>circle = 0</strong>.</span>
+        </div>
+
+        <div class="chips" aria-label="Encoded phone number">
+            <!-- Group 1: 336 -->
+            <span class="chip" title="3">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-3"/></svg>
+            </span>
+            <span class="chip" title="3">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-3"/></svg>
+            </span>
+            <span class="chip" title="6">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-6"/></svg>
+            </span>
+            <span class="sep">—</span>
+
+            <!-- Group 2: 745 -->
+            <span class="chip" title="7">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-7"/></svg>
+            </span>
+            <span class="chip" title="4">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-4"/></svg>
+            </span>
+            <span class="chip" title="5">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-5"/></svg>
+            </span>
+            <span class="sep">—</span>
+
+            <!-- Group 3: 7508 -->
+            <span class="chip" title="7">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-7"/></svg>
+            </span>
+            <span class="chip" title="5">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-5"/></svg>
+            </span>
+            <span class="chip" title="0">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-0"/></svg>
+            </span>
+            <span class="chip" title="8">
+                <svg class="poly" viewBox="0 0 100 100" aria-hidden="true"><use href="#poly-8"/></svg>
+            </span>
+            </div>
+
+
+  <!-- ===== Reusable polygon symbols (0–9) =====
+       These SVG symbols draw regular n-gons centered in a 100×100 box.
+       Mapping: 0=circle, 1=monogon-like (line loop), 2=digon, 3…9 polygons.
+  -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="poly-0" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="8" />
+      </symbol>
+      <symbol id="poly-1" viewBox="0 0 100 100">
+        <!-- draw a near-circle with a single marker to imply "1" -->
+        <path d="M50 10 A40 40 0 1 1 49.9 10" fill="none" stroke="#22c55e" stroke-width="8"/>
+        <circle cx="50" cy="10" r="5" fill="#22c55e"/>
+      </symbol>
+      <symbol id="poly-2" viewBox="0 0 100 100">
+        <!-- digon: two points connected twice (stylized) -->
+        <ellipse cx="50" cy="50" rx="40" ry="35" fill="none" stroke="#22c55e" stroke-width="8"/>
+        <line x1="10" y1="50" x2="90" y2="50" stroke="#22c55e" stroke-width="8"/>
+      </symbol>
+
+      <!-- Regular polygons 3–9 -->
+      <!-- Helper: polygon points via JS would be nicer, but we keep it inline + simple -->
+      <symbol id="poly-3" viewBox="0 0 100 100"><polygon points="50,12 86,75 14,75" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+      <symbol id="poly-4" viewBox="0 0 100 100"><polygon points="20,20 80,20 80,80 20,80" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+      <symbol id="poly-5" viewBox="0 0 100 100"><polygon points="50,10 86,38 70,85 30,85 14,38" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+      <symbol id="poly-6" viewBox="0 0 100 100"><polygon points="50,8 84,29 84,71 50,92 16,71 16,29" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+      <symbol id="poly-7" viewBox="0 0 100 100"><polygon points="50,6 81,24 92,58 73,88 27,88 8,58 19,24" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+      <symbol id="poly-8" viewBox="0 0 100 100"><polygon points="50,5 78,18 93,45 88,75 62,95 38,95 12,75 7,45 22,18" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+      <symbol id="poly-9" viewBox="0 0 100 100"><polygon points="50,4 75,15 92,37 96,64 83,88 57,98 43,98 17,88 4,64 8,37 25,15" fill="none" stroke="#22c55e" stroke-width="8" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- Accessibility: skip-link target -->
+  <div id="top" class="sr-only" aria-hidden="true">Top</div>
+</body>
+</html>
